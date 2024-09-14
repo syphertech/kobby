@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "static AudioFileManager.createRequest(urlString:apiKey:boundary:):AudioFileManager.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "print(request.description())">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

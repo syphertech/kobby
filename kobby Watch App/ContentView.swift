@@ -2,23 +2,33 @@
 //  ContentView.swift
 //  kobby Watch App
 //
-//  Created by Maxwell Anane on 8/27/24.
+//  Created by Maxwell Anane on 8/26/24.
 //
 
+import AVFoundation
 import SwiftUI
 
 struct ContentView: View {
+
+    @EnvironmentObject private var recorderContext: AudioRecorder
+    @Environment(\.colorScheme) var colorScheme
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+
+        NavigationStack {
+            VStack {
+                if recorderContext.isRecording {
+                    StopListeningView()
+                } else {
+                    StartListeningView()
+                }
+
+            }
+            
         }
-        .padding()
     }
+
 }
 
 #Preview {
-    ContentView()
+    ContentView().environmentObject(AudioRecorder())
 }

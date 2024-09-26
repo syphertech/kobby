@@ -15,7 +15,7 @@ struct FileSectionView: View {
         VStack {
             if isLoadingTranscription || isLoadingSave || isLoadingShare {
                 ProgressView() // Show ProgressView while processing
-            } else if let fileURL = fileURL {
+            } else if fileURL != nil {
                 HStack(spacing: 20) {
                     Button(action: {
                         transcribeAction() // Trigger transcribe action

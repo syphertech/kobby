@@ -93,7 +93,7 @@ struct SignView: View {
                     return
                 }
                 let idTokenString = String(data: idTokenData, encoding: .utf8)
-                
+                UserDefaults.standard.set(idTokenString, forKey: "bearerToken")
                 // Authenticate with Firebase using the Apple ID credential
                 signInWithAppleToFirebase(idToken: idTokenString, nonce: currentNonce)
             }

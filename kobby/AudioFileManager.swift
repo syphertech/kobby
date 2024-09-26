@@ -3,15 +3,10 @@ import AVFoundation
 
 struct AudioFileManager {
     
-    static func transcribeAudio(fileURL: URL, apiKey: String, completion: @escaping (String?, Error?) -> Void) {
+    static func transcribeAudio(fileURL: URL, completion: @escaping ([String]?, Error?) -> Void) {
         let boundary = UUID().uuidString
-        guard !apiKey.isEmpty else {
-                    print("Error: API key is empty.")
-                    completion(nil, NSError(domain: "AudioFileManager", code: -3, userInfo: [NSLocalizedDescriptionKey: "API key is missing."]))
-                    return
-                }
-        
-        var request = createRequest(urlString: "https://api.openai.com/v1/audio/transcriptions", apiKey: apiKey, boundary: boundary)
+        let apiKey = UserDefaults.standard.string(forKey: "bearerToken") ?? ""
+        var request = createRequest(urlString: "https://us-central1-kobby-435019.cloudfunctions.net/transcribe", jwtToken: apiKey, boundary: boundary)
         request.httpBody = createMultipartBody(fileURL: fileURL, boundary: boundary)
         
         // Print the request headers to debug
@@ -41,7 +36,7 @@ struct AudioFileManager {
 
             do {
                 if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                   let text = jsonResponse["text"] as? String {
+                   let text = jsonResponse["name"] as? [String]  {
                     completion(text, nil)
                 } else {
                     completion(nil, NSError(domain: "AudioFileManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "Invalid response format"]))
@@ -67,19 +62,19 @@ struct AudioFileManager {
         return destinationURL
     }
 
-    private static func createRequest(urlString: String, apiKey: String, boundary: String) -> URLRequest {
+    private static func createRequest(urlString: String, jwtToken: String, boundary: String) -> URLRequest {
         let url = URL(string: urlString)!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         
-        let authorizationValue = "Bearer someapikey"
+        let authorizationValue = "Bearer \(jwtToken)"
                request.setValue(authorizationValue, forHTTPHeaderField: "Authorization")
                request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
                
         // Set headers correctly
         
         // Debug print statements for headers
-        print("Authorization Header: Bearer \(apiKey)")
+        print("Authorization Header: Bearer \(jwtToken)")
         print("Content-Type Header: multipart/form-data; boundary=\(boundary)")
         if let headers = request.allHTTPHeaderFields {
             print("creattion level Request Headers: \(headers)")
@@ -109,9 +104,6 @@ struct AudioFileManager {
         return body
     }
     
-    static func fetchOpenAIAPIKey() -> String? {
-        return Bundle.main.object(forInfoDictionaryKey: "OpenAIAPIKey") as? String
-    }
     
     
     

@@ -19,7 +19,7 @@ struct NameExtractor {
         }
 
         // Your OpenAI API key
-        let apiKey = "somekey"
+        let apiKey = "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"
         
         // Refined prompt for OpenAI to extract multiple names, excluding the user's name
         let prompt = """

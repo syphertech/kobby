@@ -1,10 +1,12 @@
 import SwiftUI
 import WatchConnectivity
 import CoreData
+import AVFoundation
 
 enum AudioReceiverError: Error {
     case fileMoveFailed(String)
     case coreDataSaveFailed(String)
+    case audioProcessingFailed(String)
 }
 
 class AudioReceiver: NSObject, ObservableObject, WCSessionDelegate {
@@ -37,9 +39,11 @@ class AudioReceiver: NSObject, ObservableObject, WCSessionDelegate {
             // Try saving the file
             let savedURL = try saveReceivedFile(file: file)
             
-            // If successful, save file metadata to Core Data
-            try saveReceivedFileToCoreData(fileName: file.fileURL.lastPathComponent, filePath: savedURL.path)
+            // Apply low-pass filter to the saved audio file
+            //let filteredFileURL = try applyLowPassFilterToAudio(at: savedURL)
             
+            // If successful, save file metadata to Core Data
+            try saveReceivedFileToCoreData(fileName: savedURL.lastPathComponent, filePath: savedURL.path)
             
         } catch {
             // Handle the error appropriately
@@ -47,8 +51,6 @@ class AudioReceiver: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
-    
-    
     // Save the received file to the Documents directory with error handling
     private func saveReceivedFile(file: WCSessionFile) throws -> URL {
         let fileManager = FileManager.default
@@ -63,6 +65,60 @@ class AudioReceiver: NSObject, ObservableObject, WCSessionDelegate {
             print("Error moving file: \(error.localizedDescription)")
             throw AudioReceiverError.fileMoveFailed("Failed to move file to: \(destinationURL.path)")
         }
+    }
+
+    // Apply low-pass filter to the audio file and save it as a new file
+    private func applyLowPassFilterToAudio(at inputFileURL: URL) throws -> URL {
+        let audioFile = try AVAudioFile(forReading: inputFileURL)
+        let audioEngine = AVAudioEngine()
+        let audioFilePlayer = AVAudioPlayerNode()
+        let lowPassFilter = AVAudioUnitEQ(numberOfBands: 1)
+        
+        // Configure the low-pass filter
+        let band = lowPassFilter.bands.first!
+        band.filterType = .lowPass
+        band.frequency = 3000.0  // Cutoff frequency in Hz
+        band.bandwidth = 0.5     // Q factor
+        
+        audioEngine.attach(audioFilePlayer)
+        audioEngine.attach(lowPassFilter)
+        
+        // Connect the nodes
+        audioEngine.connect(audioFilePlayer, to: lowPassFilter, format: audioFile.processingFormat)
+        audioEngine.connect(lowPassFilter, to: audioEngine.mainMixerNode, format: audioFile.processingFormat)
+        
+        // Create a URL for the filtered audio file
+        let filteredFileURL = inputFileURL.deletingLastPathComponent().appendingPathComponent("filtered_" + inputFileURL.lastPathComponent)
+        
+        let outputFile = try AVAudioFile(forWriting: filteredFileURL, settings: audioFile.fileFormat.settings)
+        
+        // Install a tap on the mainMixerNode to capture the processed audio
+        audioEngine.mainMixerNode.installTap(onBus: 0, bufferSize: 1024, format: audioFile.processingFormat) { (buffer, _) in
+            do {
+                try outputFile.write(from: buffer)
+            } catch {
+                print("Error writing filtered audio to file: \(error.localizedDescription)")
+            }
+        }
+        
+        audioEngine.prepare()
+        try audioEngine.start()
+        
+        // Play and process the file
+        audioFilePlayer.scheduleFile(audioFile, at: nil) {
+            audioEngine.stop()
+            audioEngine.mainMixerNode.removeTap(onBus: 0)
+        }
+        audioFilePlayer.play()
+
+        // Wait for the duration of the audio file to ensure processing completes
+        let duration = Double(audioFile.length) / audioFile.fileFormat.sampleRate
+
+               // Wait for the duration of the audio file to ensure processing completes
+          usleep(UInt32(duration * 1_000_000))
+        
+        // Return the URL of the filtered audio file
+        return filteredFileURL
     }
 
     // Save received file metadata (file name, path) to Core Data with error handling
@@ -86,13 +142,12 @@ class AudioReceiver: NSObject, ObservableObject, WCSessionDelegate {
         switch error {
         case AudioReceiverError.fileMoveFailed(let message):
             print("File Move Error: \(message)")
-            // Optionally: Show an alert to the user
         case AudioReceiverError.coreDataSaveFailed(let message):
             print("Core Data Save Error: \(message)")
-            // Optionally: Show an alert to the user
+        case AudioReceiverError.audioProcessingFailed(let message):
+            print("Audio Processing Error: \(message)")
         default:
             print("Unknown error: \(error.localizedDescription)")
-            // Optionally: Show an alert to the user
         }
     }
 }

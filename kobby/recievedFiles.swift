@@ -9,7 +9,7 @@ struct RecievedFiles: View {
     ) private var receivedFiles: FetchedResults<ReceivedFile>
     
     @Environment(\.colorScheme) var colorScheme
-    @State private var transcriptionResults: [URL: String] = [:]
+   
     @State private var isLoadingTranscription: [URL: Bool] = [:]
     @State private var isLoadingSave: [URL: Bool] = [:]
     @State private var isLoadingShare: [URL: Bool] = [:]
@@ -33,7 +33,7 @@ struct RecievedFiles: View {
                             isLoadingTranscription: isLoadingTranscription[fileURL] == true,
                             isLoadingSave: isLoadingSave[fileURL] == true,
                             isLoadingShare: isLoadingShare[fileURL] == true,
-                            transcription: transcriptionResults[fileURL],
+                            transcription: extractedPersonNames[fileURL]?.first,
                             transcribeAction: {
                                 transcribeAudio(fileURL: fileURL)
                             },
@@ -76,7 +76,7 @@ struct RecievedFiles: View {
 
     func saveData(names: [String]) {
         for name in names {
-            if name == "unknown" { continue }
+            if name == "Name not mentioned" { continue }
             let newEntry = People(context: viewContext)
             newEntry.id = UUID()
             newEntry.name = name
@@ -84,7 +84,7 @@ struct RecievedFiles: View {
             formatter.dateFormat = "yyyy/MM/dd/HH/mmss"
             let formattedDate = formatter.string(from: Date())
             newEntry.timestamp = formattedDate
-            newEntry.location = ""
+            newEntry.location = LocationManager().currentPlaceName
             newEntry.notes = "No notes"
 
             do {
@@ -96,14 +96,11 @@ struct RecievedFiles: View {
     }
     
     private func transcribeAudio(fileURL: URL) {
-        guard let apiKey = AudioFileManager.fetchOpenAIAPIKey() else {
-            print("OpenAI API Key not found.")
-            return
-        }
+        
 
         isLoadingTranscription[fileURL] = true
 
-        AudioFileManager.transcribeAudio(fileURL: fileURL, apiKey: apiKey) { text, error in
+        AudioFileManager.transcribeAudio(fileURL: fileURL) { text, error in
             DispatchQueue.main.async {
                 self.isLoadingTranscription[fileURL] = false
 
@@ -111,22 +108,14 @@ struct RecievedFiles: View {
                     print("Error during transcription: \(error.localizedDescription)")
                     return
                 }
-                if let text = text {
-                    self.transcriptionResults[fileURL] = text
-
-                    // Extract the names of the new people using the updated NameExtractor
-                    NameExtractor.extractOtherPersonsNames(from: text) { names in
-                        DispatchQueue.main.async {
-                            if let peopleNames = names, !peopleNames.isEmpty {
-                                self.extractedPersonNames[fileURL] = peopleNames
-                                // Save the extracted names into Core Data
-                                saveData(names: peopleNames)
-                            } else {
-                                self.extractedPersonNames[fileURL] = ["Name not found"]
-                            }
-                        }
+                if let nameList = text {
+                    self.extractedPersonNames[fileURL] = text
+                    self.saveData(names: nameList)
                     }
-                }
+               
+               
+                
+                
             }
         }
     }

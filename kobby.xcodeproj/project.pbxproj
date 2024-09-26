@@ -704,6 +704,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = kobby/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = kobby;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to add the place we created the name entry";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We use speech recognition to identify the names of people you meet";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -740,6 +741,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = kobby/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = kobby;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to add the place we created the name entry";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We use speech recognition to identify the names of people you meet";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

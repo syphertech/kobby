@@ -30,7 +30,7 @@ struct FileSectionView: View {
                         Text("#\(fileName.prefix(10))")
                             .padding(10)
 
-                        if let transcription = transcription {
+                        if transcription != nil {
                             Image(systemName: "checkmark.seal.fill")
                                 .resizable()
                                 .frame(width: 10, height: 10)

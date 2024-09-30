@@ -67,6 +67,7 @@ struct HomeView: View {
                                 .padding()
                         }
                         .frame(width: 160, height: 160)
+                        .padding(.leading,10)
                         .background(
                             RoundedRectangle(cornerRadius: 20)
                                 .fill(Color(.systemBackground))
@@ -107,7 +108,7 @@ struct HomeView: View {
                             radius: 5,
                             x: 0,
                             y: 2
-                        )
+                        ).padding(.trailing,10)
                         .scaleEffect(buttonScale)
                     }
                 }
@@ -118,7 +119,9 @@ struct HomeView: View {
                 }
                 setupWatchConnectivity()
             }
-            .padding()
+            .padding(.horizontal,10)
+    
+           
             .navigationTitle("Home") // Add navigation title for HomeView
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

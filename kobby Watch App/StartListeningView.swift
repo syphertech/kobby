@@ -26,7 +26,6 @@ struct StartListeningView    : View {
                         .opacity(0.3))
                 Text("Start Listening")
                     .font(.system(size: 15))
-                
                     .foregroundColor(.cyan)
                     .foregroundStyle(.tint)
                     .padding(.top, 10)

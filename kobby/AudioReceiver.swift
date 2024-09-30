@@ -39,10 +39,7 @@ class AudioReceiver: NSObject, ObservableObject, WCSessionDelegate {
             // Try saving the file
             let savedURL = try saveReceivedFile(file: file)
             
-            // Apply low-pass filter to the saved audio file
-            //let filteredFileURL = try applyLowPassFilterToAudio(at: savedURL)
-            
-            // If successful, save file metadata to Core Data
+            // Save file metadata to Core Data
             try saveReceivedFileToCoreData(fileName: savedURL.lastPathComponent, filePath: savedURL.path)
             
         } catch {
@@ -65,60 +62,6 @@ class AudioReceiver: NSObject, ObservableObject, WCSessionDelegate {
             print("Error moving file: \(error.localizedDescription)")
             throw AudioReceiverError.fileMoveFailed("Failed to move file to: \(destinationURL.path)")
         }
-    }
-
-    // Apply low-pass filter to the audio file and save it as a new file
-    private func applyLowPassFilterToAudio(at inputFileURL: URL) throws -> URL {
-        let audioFile = try AVAudioFile(forReading: inputFileURL)
-        let audioEngine = AVAudioEngine()
-        let audioFilePlayer = AVAudioPlayerNode()
-        let lowPassFilter = AVAudioUnitEQ(numberOfBands: 1)
-        
-        // Configure the low-pass filter
-        let band = lowPassFilter.bands.first!
-        band.filterType = .lowPass
-        band.frequency = 3000.0  // Cutoff frequency in Hz
-        band.bandwidth = 0.5     // Q factor
-        
-        audioEngine.attach(audioFilePlayer)
-        audioEngine.attach(lowPassFilter)
-        
-        // Connect the nodes
-        audioEngine.connect(audioFilePlayer, to: lowPassFilter, format: audioFile.processingFormat)
-        audioEngine.connect(lowPassFilter, to: audioEngine.mainMixerNode, format: audioFile.processingFormat)
-        
-        // Create a URL for the filtered audio file
-        let filteredFileURL = inputFileURL.deletingLastPathComponent().appendingPathComponent("filtered_" + inputFileURL.lastPathComponent)
-        
-        let outputFile = try AVAudioFile(forWriting: filteredFileURL, settings: audioFile.fileFormat.settings)
-        
-        // Install a tap on the mainMixerNode to capture the processed audio
-        audioEngine.mainMixerNode.installTap(onBus: 0, bufferSize: 1024, format: audioFile.processingFormat) { (buffer, _) in
-            do {
-                try outputFile.write(from: buffer)
-            } catch {
-                print("Error writing filtered audio to file: \(error.localizedDescription)")
-            }
-        }
-        
-        audioEngine.prepare()
-        try audioEngine.start()
-        
-        // Play and process the file
-        audioFilePlayer.scheduleFile(audioFile, at: nil) {
-            audioEngine.stop()
-            audioEngine.mainMixerNode.removeTap(onBus: 0)
-        }
-        audioFilePlayer.play()
-
-        // Wait for the duration of the audio file to ensure processing completes
-        let duration = Double(audioFile.length) / audioFile.fileFormat.sampleRate
-
-               // Wait for the duration of the audio file to ensure processing completes
-          usleep(UInt32(duration * 1_000_000))
-        
-        // Return the URL of the filtered audio file
-        return filteredFileURL
     }
 
     // Save received file metadata (file name, path) to Core Data with error handling

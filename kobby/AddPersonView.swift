@@ -97,7 +97,7 @@ struct AddPersonView: View {
             let newEntry = People(context: viewContext)
             newEntry.id = UUID()
             newEntry.name = name
-            newEntry.timestamp = useCurrentDate ? DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none) : DateFormatter.localizedString(from: selectedDate, dateStyle: .medium, timeStyle: .none)
+            newEntry.timestamp = useCurrentDate ?DateFormatterHelper.formattedDate(from: selectedDate.ISO8601Format()) : DateFormatterHelper.formattedDate(from: Date().ISO8601Format())
             newEntry.location = useCurrentLocation ? currentLocationDescription : location
             newEntry.notes = notes
             

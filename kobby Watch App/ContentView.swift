@@ -9,11 +9,11 @@ import AVFoundation
 import SwiftUI
 
 struct ContentView: View {
-
+    
     @EnvironmentObject private var recorderContext: AudioRecorder
     @Environment(\.colorScheme) var colorScheme
     var body: some View {
-
+        
         NavigationStack {
             VStack {
                 if recorderContext.isRecording {
@@ -21,12 +21,20 @@ struct ContentView: View {
                 } else {
                     StartListeningView()
                 }
-
+                
             }
-            
+            .alert(isPresented: $recorderContext.ShowPermissionNeededAlert
+            ){
+                Alert(title: Text("Permission Needed"),
+                      message:
+                        Text("To use the microphone, please go to Settings > Privacy > Microphone and enable it.")
+                )
+                
+            }
         }
+        
+        
     }
-
 }
 
 #Preview {

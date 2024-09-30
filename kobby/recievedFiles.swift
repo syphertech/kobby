@@ -121,6 +121,10 @@ struct RecievedFiles: View {
     }
     
     private func shareFile(fileURL: URL) {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            print("File does not exist at path: \(fileURL.path)")
+            return
+        }
         self.fileToShare = fileURL
         self.showShareSheet = true
     }

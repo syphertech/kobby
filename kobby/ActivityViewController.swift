@@ -8,9 +8,9 @@
 
 import SwiftUI
 import UIKit
-
+//
 struct ActivityViewController: UIViewControllerRepresentable {
-    var activityItems: [Any]
+    var activityItems: [Any] = []
     var applicationActivities: [UIActivity]? = nil
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
@@ -18,6 +18,12 @@ struct ActivityViewController: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
-        // No update needed for static content
+        // No updates needed here
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
     }
 }

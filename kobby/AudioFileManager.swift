@@ -8,7 +8,7 @@ struct AudioFileManager {
         let apiKey = UserDefaults.standard.string(forKey: "bearerToken") ?? ""
         var request = createRequest(urlString: "https://us-central1-kobby-435019.cloudfunctions.net/transcribe", jwtToken: apiKey, boundary: boundary)
         request.httpBody = createMultipartBody(fileURL: fileURL, boundary: boundary)
-        
+        let userName = UserDefaults.standard.bool(forKey: "fisrtName");
         // Print the request headers to debug
         if let headers = request.allHTTPHeaderFields {
             print("Request Headers: \(headers)")
@@ -36,7 +36,9 @@ struct AudioFileManager {
 
             do {
                 if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                   let text = jsonResponse["name"] as? [String]  {
+                   
+                   var text = jsonResponse["name"] as? [String]  {
+                    text = text.filter{ $0 != "\(userName)"}
                     completion(text, nil)
                 } else {
                     completion(nil, NSError(domain: "AudioFileManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "Invalid response format"]))
